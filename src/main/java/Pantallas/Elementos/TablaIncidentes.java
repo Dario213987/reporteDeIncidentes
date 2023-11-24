@@ -29,6 +29,11 @@ public class TablaIncidentes extends AbstractTableModel {
     public Incidente getIncidente(int fila){
         return incidentes.get(fila);
     }
+    public void agregarIncidente(Incidente nuevoIncidente) {
+        incidentes.add(nuevoIncidente);
+        int nuevaFila = incidentes.size() - 1;
+        fireTableRowsInserted(nuevaFila, nuevaFila);
+    }
     @Override
     public Object getValueAt(int i, int j) {
         return switch (j) {

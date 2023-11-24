@@ -27,6 +27,8 @@ public class Incidente {
     private boolean estado;
     @Column(name = "tiempo_estimado_incidente")
     private long tiempoEstimado;
+    @Column(name = "observaciones")
+    private String observaciones;
 
     public int getIdIncidente() {
         return idIncidente;
@@ -82,5 +84,13 @@ public class Incidente {
 
     public void setTiempoEstimado(long tiempoEstimado) {
         this.tiempoEstimado = tiempoEstimado;
+    }
+
+    public String getObservaciones() {
+        return observaciones;
+    }
+
+    public void setObservaciones(String observaciones) {
+        this.observaciones = observaciones;
     }
 }

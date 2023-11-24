@@ -23,7 +23,7 @@ public class Tecnico {
     private String telefono;
     @Column(name = "email_tecnico",length = 32)
     private String email;
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "tecnicos_servicios",
             joinColumns = @JoinColumn(name = "id_tecnico"),

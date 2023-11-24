@@ -1,7 +1,4 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
+
 package Pantallas;
 
 import Entidades.Cliente;
@@ -13,9 +10,13 @@ import Pantallas.Elementos.TablaClientes;
 import Pantallas.Elementos.TablaIncidentes;
 import Pantallas.Elementos.TablaServicios;
 import Pantallas.Elementos.TablaTecnico;
+import Pantallas.Formularios.FormularioIncidencia;
+import com.formdev.flatlaf.FlatLaf;
+import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMaterialDarkerContrastIJTheme;
 
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
 
 
 public class pantallaPrincipal extends javax.swing.JFrame {
@@ -34,6 +35,8 @@ public class pantallaPrincipal extends javax.swing.JFrame {
         tecnicos = new DAOGenericoHibernate<>(Tecnico.class);
     }
     private void initComponents() {
+        setTitle("Gestión de incidencias");
+        setPreferredSize(new Dimension(1280,720));
 
         TabbedPane = new javax.swing.JTabbedPane();
         TabIncidencias = new javax.swing.JLayeredPane();
@@ -54,17 +57,41 @@ public class pantallaPrincipal extends javax.swing.JFrame {
         jLayeredPane4 = new javax.swing.JLayeredPane();
         jScrollPane7 = new javax.swing.JScrollPane();
         tablaServicios = new javax.swing.JTable();
+        JPopupMenu menuIncidencias = new JPopupMenu();
+        JMenuItem nuevaIncidencia = new JMenuItem();
+
+        tablaIncidencias.setFocusable(false);
+        tablaClientes.setFocusable(false);
+        tablaServicios.setFocusable(false);
+        tablaTecnicos.setFocusable(false);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         TabIncidencias.setLayout(new java.awt.BorderLayout());
 
         tablaIncidencias.setModel(new TablaIncidentes(incidentes.getAll()));
+
+        nuevaIncidencia.setText("Nueva Incidencia");
+        var ventana = this;
+        nuevaIncidencia.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                FormularioIncidencia formulario = new FormularioIncidencia(ventana,true,incidentes,clientes,servicios,tecnicos);
+                formulario.setLocationRelativeTo(ventana);
+                formulario.setVisible(true);
+            }
+        });
+        menuIncidencias.add(nuevaIncidencia);
+        tablaIncidencias.setComponentPopupMenu(menuIncidencias);
+
         tablaIncidencias.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if(e.getClickCount()==2){
                     System.out.println(((TablaIncidentes)tablaIncidencias.getModel()).getIncidente(tablaIncidencias.rowAtPoint(e.getPoint())));
+                }
+                if(e.isPopupTrigger()){
+                    menuIncidencias.show(tablaIncidencias,e.getX(),e.getY());
                 }
             }
         });
@@ -143,6 +170,11 @@ public class pantallaPrincipal extends javax.swing.JFrame {
 
         pack();
     }
+
+    public TablaIncidentes getTablaIncidencias(){
+        return (TablaIncidentes) tablaIncidencias.getModel();
+    }
+
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
@@ -170,7 +202,16 @@ public class pantallaPrincipal extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new pantallaPrincipal().setVisible(true);
+                FlatLaf.setup(new FlatMaterialDarkerContrastIJTheme());
+                UIManager.put( "Button.arc", 17 );
+                UIManager.put( "Component.arc", 17 );
+                UIManager.put( "TextComponent.arc", 17 );
+                UIManager.put( "Component.focusWidth", 1 );
+                UIManager.put( "ScrollBar.thumbArc", 999 );
+                UIManager.put( "ScrollBar.thumbInsets", new Insets( 2, 2, 2, 2 ) );
+                var pantalla = new pantallaPrincipal();
+                pantalla.setLocationRelativeTo(null);
+                pantalla.setVisible(true);
             }
         });
     }
