@@ -39,9 +39,6 @@ public class Servicio {
 
     @Override
     public String toString() {
-        return "Servicio{" +
-                "idServicio=" + idServicio +
-                ", nombre='" + nombre + '\'' +
-                '}';
+        return nombre;
     }
 }
