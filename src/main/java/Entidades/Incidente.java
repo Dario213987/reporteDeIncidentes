@@ -1,12 +1,20 @@
 package Entidades;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 @Entity
 @Table(name = "incidentes")
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Incidente {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,68 +37,4 @@ public class Incidente {
     private long tiempoEstimado;
     @Column(name = "observaciones")
     private String observaciones;
-
-    public int getIdIncidente() {
-        return idIncidente;
-    }
-
-    public void setIdIncidente(int idIncidente) {
-        this.idIncidente = idIncidente;
-    }
-
-    public Date getFecha() {
-        return fecha;
-    }
-
-    public void setFecha(Date fecha) {
-        this.fecha = fecha;
-    }
-
-    public Cliente getCliente() {
-        return cliente;
-    }
-
-    public void setCliente(Cliente cliente) {
-        this.cliente = cliente;
-    }
-
-    public Servicio getServicio() {
-        return servicio;
-    }
-
-    public void setServicio(Servicio servicio) {
-        this.servicio = servicio;
-    }
-
-    public Tecnico getTecnicoAsignado() {
-        return tecnicoAsignado;
-    }
-
-    public void setTecnicoAsignado(Tecnico tecnicoAsignado) {
-        this.tecnicoAsignado = tecnicoAsignado;
-    }
-
-    public boolean isEstado() {
-        return estado;
-    }
-
-    public void setEstado(boolean estado) {
-        this.estado = estado;
-    }
-
-    public long getTiempoEstimado() {
-        return tiempoEstimado;
-    }
-
-    public void setTiempoEstimado(long tiempoEstimado) {
-        this.tiempoEstimado = tiempoEstimado;
-    }
-
-    public String getObservaciones() {
-        return observaciones;
-    }
-
-    public void setObservaciones(String observaciones) {
-        this.observaciones = observaciones;
-    }
 }

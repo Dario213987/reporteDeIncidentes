@@ -1,13 +1,20 @@
 package Entidades;
 
 import jakarta.persistence.*;
-import org.hibernate.Hibernate;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "clientes")
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Cliente {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,7 +23,7 @@ public class Cliente {
     @Column(name = "razon_social_cliente", length = 64)
     private String razonSocial;
     @Column(name = "cuit_cliente")
-    private int cuit;
+    private String cuit;
     @Column(name = "telefono_cliente",length = 15)
     private String telefono;
     @Column(name = "email_cliente",length = 32)
@@ -29,63 +36,6 @@ public class Cliente {
     private List<Servicio> serviciosContratados = new ArrayList<>();
     @OneToMany(mappedBy = "cliente",cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Incidente> incidentes = new ArrayList<>();
-
-    public int getIdCliente() {
-        return idCliente;
-    }
-
-    public void setIdCliente(int idCliente) {
-        this.idCliente = idCliente;
-    }
-
-    public String getRazonSocial() {
-        return razonSocial;
-    }
-
-    public void setRazonSocial(String razonSocial) {
-        this.razonSocial = razonSocial;
-    }
-
-    public int getCuit() {
-        return cuit;
-    }
-
-    public void setCuit(int cuit) {
-        this.cuit = cuit;
-    }
-
-    public String getTelefono() {
-        return telefono;
-    }
-
-    public void setTelefono(String telefono) {
-        this.telefono = telefono;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public List<Servicio> getServiciosContratados() {
-        return serviciosContratados;
-    }
-
-    public void setServiciosContratados(List<Servicio> serviciosContratados) {
-        this.serviciosContratados = serviciosContratados;
-    }
-
-    public List<Incidente> getIncidentes() {
-        return incidentes;
-    }
-
-    public void setIncidentes(List<Incidente> incidentes) {
-        this.incidentes = incidentes;
-    }
-
     public void addServicioContratado(Servicio servicio){
         serviciosContratados.add(servicio);
     }

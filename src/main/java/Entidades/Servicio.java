@@ -1,12 +1,20 @@
 package Entidades;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "servicios")
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Servicio {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,27 +26,6 @@ public class Servicio {
     private List<Cliente> clientes = new ArrayList<>();
     @ManyToMany(mappedBy = "competencias",fetch = FetchType.EAGER)
     private List<Tecnico> tecnicosCapacitados = new ArrayList<>();
-    public int getIdServicio() {
-        return idServicio;
-    }
-    public void setIdServicio(int idServicio) {
-        this.idServicio = idServicio;
-    }
-    public String getNombre() {
-        return nombre;
-    }
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
-    public List<Cliente> getClientes() {
-        return clientes;
-    }
-    public void setClientes(List<Cliente> clientes) {
-        this.clientes = clientes;
-    }
-    public List<Tecnico> getTecnicosCapacitados() {
-        return tecnicosCapacitados;
-    }
     public void addTecnicosCapacitados(Tecnico tecnicoCapacitado) {
         tecnicosCapacitados.add(tecnicoCapacitado);
     }

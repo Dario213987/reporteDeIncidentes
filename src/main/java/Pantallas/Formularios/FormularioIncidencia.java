@@ -6,8 +6,10 @@ import Entidades.Incidente;
 import Entidades.Servicio;
 import Entidades.Tecnico;
 import Logica.DAOGenericoHibernate;
+import Logica.Mailer;
 import Pantallas.pantallaPrincipal;
 
+import javax.activation.MailcapCommandMap;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -16,10 +18,12 @@ import java.time.Duration;
 import java.util.Calendar;
 
 public class FormularioIncidencia extends javax.swing.JDialog {
+    Incidente incidenteATrabajar;
     DAOGenericoHibernate<Incidente> incidentes;
     DAOGenericoHibernate<Cliente> clientes;
     DAOGenericoHibernate<Servicio> servicios;
     DAOGenericoHibernate<Tecnico> tecnicos;
+    Mailer correo;
     public FormularioIncidencia(java.awt.Frame parent, boolean modal,DAOGenericoHibernate<Incidente> incidentes, DAOGenericoHibernate<Cliente> clientes, DAOGenericoHibernate<Servicio> servicios, DAOGenericoHibernate<Tecnico> tecnicos) {
         super(parent, modal);
         this.incidentes = incidentes;
@@ -28,7 +32,28 @@ public class FormularioIncidencia extends javax.swing.JDialog {
         this.tecnicos = tecnicos;
         initComponents();
     }
+    public FormularioIncidencia(java.awt.Frame parent, boolean modal,DAOGenericoHibernate<Incidente> incidentes, DAOGenericoHibernate<Cliente> clientes, DAOGenericoHibernate<Servicio> servicios, DAOGenericoHibernate<Tecnico> tecnicos,Incidente incidente) {
+        super(parent, modal);
+        this.incidentes = incidentes;
+        this.clientes = clientes;
+        this.servicios = servicios;
+        this.tecnicos = tecnicos;
+        this.incidenteATrabajar = incidente;
+        initComponents();
+        fechaIncidencia.setDate(incidenteATrabajar.getFecha());
+        comboboxClientes.setSelectedItem(incidenteATrabajar.getCliente());
+        cargarServicios();
+        comboboxServicios.setSelectedItem(incidenteATrabajar.getServicio());
+        cargarTecnicos();
+        comboboxTecnicos.setSelectedItem(incidenteATrabajar.getTecnicoAsignado());
+        cajaDeObservaciones.setText(incidenteATrabajar.getObservaciones());
+    }
     private void initComponents() {
+        try {
+            correo = new Mailer();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         setResizable(false);
         setTitle("Nueva Incidencia");
 
@@ -38,8 +63,6 @@ public class FormularioIncidencia extends javax.swing.JDialog {
         comboboxTecnicos = new javax.swing.JComboBox<>();
         botonGuardar = new javax.swing.JButton();
         horasEstimadas = new javax.swing.JSpinner();
-        jLabel1 = new javax.swing.JLabel();
-        minutosEstimados = new javax.swing.JSpinner();
         jLabel2 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
@@ -47,8 +70,10 @@ public class FormularioIncidencia extends javax.swing.JDialog {
         jLabel6 = new javax.swing.JLabel();
         jLabel7 = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
-        cajaDeObservaciones = new javax.swing.JTextPane();
+        cajaDeObservaciones = new javax.swing.JTextArea();
         jLabel8 = new javax.swing.JLabel();
+        checkBoxCorreo = new JCheckBox("Enviar correo");
+        checkBoxCorreo.setSelected(true);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -60,11 +85,9 @@ public class FormularioIncidencia extends javax.swing.JDialog {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 if(comboboxClientes.getSelectedItem() != null){
-                    comboboxServicios.setModel(new DefaultComboBoxModel<>(
-                            clientes.getByID(((Cliente)comboboxClientes.getSelectedItem()).getIdCliente()).getServiciosContratados().toArray(new Servicio[0])));
-                            comboboxServicios.setEnabled(true);
-                            comboboxTecnicos.setModel(new DefaultComboBoxModel<>());
-                            comboboxTecnicos.setEnabled(false);
+                    cargarServicios();
+                    comboboxTecnicos.setModel(new DefaultComboBoxModel<>());
+                    comboboxTecnicos.setEnabled(false);
                 }
             }
         });
@@ -72,9 +95,7 @@ public class FormularioIncidencia extends javax.swing.JDialog {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 if(comboboxServicios.getSelectedItem() != null){
-                    comboboxTecnicos.setModel(new DefaultComboBoxModel<>(
-                            servicios.getByID(((Servicio)comboboxServicios.getSelectedItem()).getIdServicio()).getTecnicosCapacitados().toArray(new Tecnico[0])));
-                    comboboxTecnicos.setEnabled(true);
+                    cargarTecnicos();
                 }
             }
         });
@@ -83,8 +104,6 @@ public class FormularioIncidencia extends javax.swing.JDialog {
         comboboxTecnicos.setEnabled(false);
         botonGuardar.setText("Guardar");
         botonGuardar.addActionListener(this::guardarIncidencia);
-
-        jLabel1.setText(":");
 
         jLabel2.setText("hs.");
 
@@ -99,8 +118,9 @@ public class FormularioIncidencia extends javax.swing.JDialog {
         jLabel7.setText("Técnico:");
 
         jScrollPane1.setViewportView(cajaDeObservaciones);
-
+        cajaDeObservaciones.setLineWrap(true);
         jLabel8.setText("Observaciones:");
+
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -117,10 +137,6 @@ public class FormularioIncidencia extends javax.swing.JDialog {
                             .addComponent(jLabel3)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(horasEstimadas, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jLabel1)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(minutosEstimados, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jLabel2))
                             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
@@ -165,11 +181,8 @@ public class FormularioIncidencia extends javax.swing.JDialog {
                         .addComponent(comboboxTecnicos, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
                         .addComponent(jLabel3)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(horasEstimadas, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel1)
-                            .addComponent(minutosEstimados, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jLabel2)))
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 405, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -192,30 +205,60 @@ public class FormularioIncidencia extends javax.swing.JDialog {
             JOptionPane.showMessageDialog(this,"Llenar la caja de observaciones con ua descripción de problema","Error",JOptionPane.ERROR_MESSAGE);
             return;
         }
-        Incidente nuevoIncidente = new Incidente();
-        nuevoIncidente.setCliente((Cliente) comboboxClientes.getSelectedItem());
-        nuevoIncidente.setServicio((Servicio) comboboxServicios.getSelectedItem());
-        nuevoIncidente.setTecnicoAsignado((Tecnico) comboboxTecnicos.getSelectedItem());
-        nuevoIncidente.setEstado(false);
-        nuevoIncidente.setObservaciones(cajaDeObservaciones.getText());
-        nuevoIncidente.setTiempoEstimado(Duration.ofHours(Math.abs((Integer) horasEstimadas.getValue())).toMillis()+ Duration.ofMinutes(Math.abs((Integer) minutosEstimados.getValue())).toMillis());
-        nuevoIncidente.setFecha(fechaIncidencia.getDate());
-        ((Cliente) comboboxClientes.getSelectedItem()).addIncidente(nuevoIncidente);
-        System.out.println("Estoy guardando Flaco");
-        incidentes.save(nuevoIncidente);
-        ((pantallaPrincipal)getParent()).getTablaIncidencias().agregarIncidente(nuevoIncidente);
+        boolean estado = false;
+        if(incidenteATrabajar != null){
+            estado = incidenteATrabajar.isEstado();
+        }
+        incidenteATrabajar = Incidente.builder()
+                .cliente((Cliente) comboboxClientes.getSelectedItem())
+                        .servicio((Servicio) comboboxServicios.getSelectedItem())
+                                .tecnicoAsignado((Tecnico) comboboxTecnicos.getSelectedItem())
+                                        .estado(estado)
+                                                .observaciones(cajaDeObservaciones.getText())
+                                                        .tiempoEstimado(Duration.ofHours(Math.abs((Integer) horasEstimadas.getValue())).toMillis())
+                                                                .fecha(fechaIncidencia.getDate())
+                                                                        .build();
+        ((Cliente) comboboxClientes.getSelectedItem()).addIncidente(incidenteATrabajar);
+        incidentes.save(incidenteATrabajar);
+        ((pantallaPrincipal)getParent()).getTablaIncidencias().agregarIncidente(incidenteATrabajar);
+        //enviarCorreo();
         this.dispose();
     }
+    public void cargarTecnicos(){
+        comboboxTecnicos.setModel(new DefaultComboBoxModel<>(
+                servicios.getByID(((Servicio)comboboxServicios.getSelectedItem()).getIdServicio()).getTecnicosCapacitados().toArray(new Tecnico[0])));
+        comboboxTecnicos.setEnabled(true);
+    }
+    private void cargarServicios(){
+        comboboxServicios.setModel(new DefaultComboBoxModel<>(
+                clientes.getByID(((Cliente)comboboxClientes.getSelectedItem()).getIdCliente()).getServiciosContratados().toArray(new Servicio[0])));
+        comboboxServicios.setEnabled(true);
+    }
 
+    private void enviarCorreo(){
+        Thread hiloCorreo = new Thread(){
+            @Override
+            public void run() {
+                if (checkBoxCorreo.isSelected())
+                    try {
+                        correo.sendMail(incidenteATrabajar.getCliente().getRazonSocial() + " - " + incidenteATrabajar.getServicio().getNombre(),
+                                incidenteATrabajar.getObservaciones(),
+                                incidenteATrabajar.getTecnicoAsignado().getEmail());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+            }
+        };
+        hiloCorreo.start();
+    }
 
     private javax.swing.JButton botonGuardar;
-    private javax.swing.JTextPane cajaDeObservaciones;
+    private javax.swing.JTextArea cajaDeObservaciones;
     private javax.swing.JComboBox<Cliente> comboboxClientes;
     private javax.swing.JComboBox<Servicio> comboboxServicios;
     private javax.swing.JComboBox<Tecnico> comboboxTecnicos;
     private com.toedter.calendar.JDateChooser fechaIncidencia;
     private javax.swing.JSpinner horasEstimadas;
-    private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -224,5 +267,6 @@ public class FormularioIncidencia extends javax.swing.JDialog {
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JSpinner minutosEstimados;
+    private javax.swing.JCheckBox checkBoxCorreo;
+
 }

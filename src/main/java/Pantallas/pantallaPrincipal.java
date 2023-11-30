@@ -6,6 +6,7 @@ import Entidades.Incidente;
 import Entidades.Servicio;
 import Entidades.Tecnico;
 import Logica.DAOGenericoHibernate;
+import Logica.DAOInferencia;
 import Pantallas.Elementos.TablaClientes;
 import Pantallas.Elementos.TablaIncidentes;
 import Pantallas.Elementos.TablaServicios;
@@ -17,10 +18,11 @@ import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMaterialDarker
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.List;
 
 
 public class pantallaPrincipal extends javax.swing.JFrame {
-    DAOGenericoHibernate<Incidente> incidentes;
+    DAOInferencia incidentes;
     DAOGenericoHibernate<Cliente> clientes;
     DAOGenericoHibernate<Servicio> servicios;
     DAOGenericoHibernate<Tecnico> tecnicos;
@@ -29,7 +31,7 @@ public class pantallaPrincipal extends javax.swing.JFrame {
         initComponents();
     }
     public void cargarDAO(){
-        incidentes = new DAOGenericoHibernate<>(Incidente.class);
+        incidentes = new DAOInferencia();
         clientes = new DAOGenericoHibernate<>(Cliente.class);
         servicios = new DAOGenericoHibernate<>(Servicio.class);
         tecnicos = new DAOGenericoHibernate<>(Tecnico.class);
@@ -47,7 +49,7 @@ public class pantallaPrincipal extends javax.swing.JFrame {
         jDateChooser1 = new com.toedter.calendar.JDateChooser();
         jLabel1 = new javax.swing.JLabel();
         jDateChooser2 = new com.toedter.calendar.JDateChooser();
-        jCheckBox1 = new javax.swing.JCheckBox();
+        filtrarPorFecha = new javax.swing.JButton();
         jLayeredPane2 = new javax.swing.JLayeredPane();
         jScrollPane5 = new javax.swing.JScrollPane();
         tablaTecnicos = new javax.swing.JTable();
@@ -59,6 +61,9 @@ public class pantallaPrincipal extends javax.swing.JFrame {
         tablaServicios = new javax.swing.JTable();
         JPopupMenu menuIncidencias = new JPopupMenu();
         JMenuItem nuevaIncidencia = new JMenuItem();
+        JMenuItem eliminarIncidencias = new JMenuItem();
+        JMenuItem modificarIncidencia = new JMenuItem("Modificar Incidencia");
+        filtrarPorFecha.addActionListener(this::filtrarPorFecha);
 
         tablaIncidencias.setFocusable(false);
         tablaClientes.setFocusable(false);
@@ -81,9 +86,41 @@ public class pantallaPrincipal extends javax.swing.JFrame {
                 formulario.setVisible(true);
             }
         });
-        menuIncidencias.add(nuevaIncidencia);
-        tablaIncidencias.setComponentPopupMenu(menuIncidencias);
+        eliminarIncidencias.setText("Eliminar Incidencias");
+        eliminarIncidencias.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                if(tablaIncidencias.getSelectedRow()!=-1) {
+                    if (0 == JOptionPane.showConfirmDialog(ventana, "¿Está seguro que desea eliminar estas incidencias?", "Confirmación", JOptionPane.YES_NO_OPTION)) {
+                        List<Incidente> incidenteList = getTablaIncidencias().getIncidentes(tablaIncidencias.getSelectedRows());
+                        getTablaIncidencias().eliminarIncidentes(incidenteList);
+                        incidentes.deleteAll(incidenteList);
+                    }
+                }
+            }
+        });
+        modificarIncidencia.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                if(tablaIncidencias.getSelectedRow()!=-1) {
 
+                    FormularioIncidencia formulario = new FormularioIncidencia(ventana,
+                            true,
+                            incidentes,
+                            clientes,
+                            servicios,
+                            tecnicos,
+                            getTablaIncidencias().getIncidente(tablaIncidencias.getSelectedRow()));
+                    formulario.setLocationRelativeTo(ventana);
+                    formulario.setVisible(true);
+                }
+            }
+        });
+        menuIncidencias.add(nuevaIncidencia);
+        menuIncidencias.add(eliminarIncidencias);
+        menuIncidencias.add(modificarIncidencia);
+        scrollTablaIncidencias.setComponentPopupMenu(menuIncidencias);
+        tablaIncidencias.setComponentPopupMenu(scrollTablaIncidencias.getComponentPopupMenu());
         tablaIncidencias.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -107,9 +144,9 @@ public class pantallaPrincipal extends javax.swing.JFrame {
         panelSuperiorIncidencias.add(jLabel1);
         panelSuperiorIncidencias.add(jDateChooser2);
 
-        jCheckBox1.setText("Resuelta");
+        filtrarPorFecha.setText("Filtrar");
 
-        panelSuperiorIncidencias.add(jCheckBox1);
+        panelSuperiorIncidencias.add(filtrarPorFecha);
 
         TabIncidencias.add(panelSuperiorIncidencias, java.awt.BorderLayout.PAGE_START);
 
@@ -174,6 +211,11 @@ public class pantallaPrincipal extends javax.swing.JFrame {
     public TablaIncidentes getTablaIncidencias(){
         return (TablaIncidentes) tablaIncidencias.getModel();
     }
+    public void filtrarPorFecha(ActionEvent evt){
+        tablaIncidencias.setModel(new TablaIncidentes(incidentes.incidentesEntreFechas(jDateChooser1.getDate(),jDateChooser2.getDate())));
+        tablaIncidencias.revalidate();
+        tablaIncidencias.repaint();
+    }
 
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
@@ -214,8 +256,9 @@ public class pantallaPrincipal extends javax.swing.JFrame {
                 pantalla.setVisible(true);
             }
         });
+
     }
-    private javax.swing.JCheckBox jCheckBox1;
+    private javax.swing.JButton filtrarPorFecha;
     private com.toedter.calendar.JDateChooser jDateChooser1;
     private com.toedter.calendar.JDateChooser jDateChooser2;
     private javax.swing.JLabel jLabel1;
